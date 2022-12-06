@@ -3,41 +3,36 @@
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width,initial-scale=1" />
-		<title>Vite mon bus</title>
+		<title>Vite mon parking</title>
 		<style>
-			#demo {
-				font-family: "Helvetica", Arial, sans-serif;
+            @import url('https://fonts.googleapis.com/css2?family=Red+Hat+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap');
+			#app {
+				font-family: 'Red Hat Display', sans-serif;
 			}
-			a {
-				text-decoration: none;
-				color: #f66;
-			}
-			li {
-				line-height: 1.5em;
-				margin-bottom: 20px;
-			}
-			.author,
-			.date {
-				font-weight: bold;
-			}
+			
 		</style>
 	</head>
 	<body>
 		<div id="app">
-			
+			<h1>Vite mon parking</h1>
+            <div class="list-parkings">
+                <div class="parking" v-for="parking in parkings">
+                    {{ parking.fields.grp_nom}}
+                </div>
+            </div>
 		</div>
 		<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 		<script src="https://unpkg.com/vue@3"></script>
 		<script>
 			const apiURL =
-				"https://data.nantesmetropole.fr/api/records/1.0/search/?dataset=244400404_parcs-relais-nantes-metropole-disponibilites&q=&facet=grp_nom&facet=grp_statut";
+				"https://data.nantesmetropole.fr/api/records/1.0/search/?rows=40&dataset=244400404_parcs-relais-nantes-metropole-disponibilites&q=&facet=grp_nom&facet=grp_statut";
 			const config = {
 			};
 
 			Vue.createApp({
 				data() {
 					return {
-						
+						parkings: null,
 					};
 				},
 				created: function () {
@@ -49,7 +44,7 @@
 						axios
 							.get(apiURL)
 							.then((response) => {
-								console.log(response.data);
+                                self.parkings = response.data.records;
 								})
 							.catch(function (error) {
 								console.log(error);
