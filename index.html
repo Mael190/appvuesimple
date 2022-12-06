@@ -3,21 +3,29 @@
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width,initial-scale=1" />
+        <link rel="stylesheet" href="index.css">
 		<title>Vite mon parking</title>
-		<style>
-            @import url('https://fonts.googleapis.com/css2?family=Red+Hat+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap');
-			#app {
-				font-family: 'Red Hat Display', sans-serif;
-			}
-			
-		</style>
 	</head>
 	<body>
 		<div id="app">
 			<h1>Vite mon parking</h1>
-            <div class="list-parkings">
-                <div class="parking" v-for="parking in parkings">
-                    {{ parking.fields.grp_nom}}
+            <div class="card-parking">
+                <h2>Liste des parkings</h2>
+               <div class="filter">
+                    <input class="search" type="text" v-model="searchString" placeholder="Nom du parking">
+                    <div class="available">
+                        <p>Filtré par parking disponible</p>
+                        <input type="checkbox" v-model="available">
+                    </div>
+               </div>
+                <div class="list-parkings">
+                    <div class="parking" v-for="parking in filteredParkings">
+                        <h4>{{ parking.fields.grp_nom}}</h4>
+                        <p>Place disponible</p>
+                        <p class="place">{{ parking.fields.disponibilite }}</p>
+                        <p>Nombre de place</p>
+                        <p>{{ parking.fields.grp_exploitation }}</p>
+                    </div>
                 </div>
             </div>
 		</div>
@@ -32,12 +40,26 @@
 			Vue.createApp({
 				data() {
 					return {
+                        searchString: "",
 						parkings: null,
+                        available: false
 					};
 				},
 				created: function () {
 					this.fetchDataPromise();
 				},
+                computed: {
+                    filteredParkings: function () {
+                        let parkings_array = this.parkings;
+                        const searchString = this.searchString;
+                        const available = this.available;
+
+                        if (available) parkings_array = parkings_array.filter(item => item.fields.grp_disponible !== 0)
+                        if (searchString) parkings_array = parkings_array.filter(item => item.fields.grp_nom.toLowerCase().indexOf(searchString) !== -1)
+                        
+                        return parkings_array;
+                    }
+                },
 				methods: {
                     fetchDataPromise: function () {
 						const self = this;
