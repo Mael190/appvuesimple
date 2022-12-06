@@ -2,7 +2,13 @@
 
 #app {
 	font-family: 'Red Hat Display', sans-serif;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
+#map { 
+    height: 300px;
+ }
 p {
     margin: 3px;
 }
@@ -32,6 +38,8 @@ h1, h2 {
     background-color: #dbfee3;
     max-width: 80vw;
     margin: 40px auto;
+    width: 80vw;
+    padding-bottom: 50px;
 }
 
 .list-parkings {
@@ -67,9 +75,34 @@ h1, h2 {
     display: flex;
     flex-direction: row;
     align-items: center;
-    width: 60%;
+
     justify-content: space-around;
 }
 .available {
+    margin: 0 20px;
     display: flex;
+    align-items: center
+}
+
+.distance-input {
+    font-size: 16px;
+    font-family: 'Red Hat Display', sans-serif;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-weight: 500;
+    width: 35px;
+    margin-left: 10px;
+}
+.distance-input:focus {
+    outline: none;
+}
+.logo {
+    margin: 0 auto;
+}
+
+.number {
+    font-size: 18px;
+    font-weight: 500;
+    font-style: italic;
 }

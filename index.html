@@ -4,11 +4,14 @@
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width,initial-scale=1" />
         <link rel="stylesheet" href="index.css">
+		<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+     integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI="
+     crossorigin=""/>
 		<title>Vite mon parking</title>
 	</head>
 	<body>
 		<div id="app">
-			<h1>Vite mon parking</h1>
+			<img class="logo" src="./logo.png" height="250" alt="">
             <div class="card-parking">
                 <h2>Liste des parkings</h2>
                <div class="filter">
@@ -17,7 +20,12 @@
                         <p>Filtré par parking disponible</p>
                         <input type="checkbox" v-model="available">
                     </div>
+					<div class="available">
+                        <p>Filtré par distance du parking (km)</p>
+                        <input max="30" default-value="20" min="0" class="distance-input" type="number" v-model="distance">
+                    </div>
                </div>
+			   <p class="number">{{filteredParkings.length}} parking(s)</p>
                 <div class="list-parkings">
                     <div class="parking" v-for="parking in filteredParkings">
                         <h4>{{ parking.fields.grp_nom}}</h4>
@@ -25,13 +33,40 @@
                         <p class="place">{{ parking.fields.disponibilite }}</p>
                         <p>Nombre de place</p>
                         <p>{{ parking.fields.grp_exploitation }}</p>
+						<p>Distance</p>
+						<p> {{ Math.round(parking.distance*100)/100 }} km</p>
                     </div>
                 </div>
             </div>
+			<div id="map"></div>
 		</div>
 		<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 		<script src="https://unpkg.com/vue@3"></script>
+		<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"
+     integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM="
+     crossorigin=""></script>
+
 		<script>
+			var map = L.map('map').setView([51.505, -0.09], 13);
+
+			function compareDistance(lon1, lat1, lon2, lat2) {
+				var R = 6371;
+				var dLat = (lat2-lat1).toRad(); 
+				var dLon = (lon2-lon1).toRad(); 
+				var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+						Math.cos(lat1.toRad()) * Math.cos(lat2.toRad()) * 
+						Math.sin(dLon/2) * Math.sin(dLon/2); 
+				var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+				var d = R * c;
+				return d;
+			}
+
+			if (typeof(Number.prototype.toRad) === "undefined") {
+				Number.prototype.toRad = function() {
+					return this * Math.PI / 180;
+				}
+			}
+
 			const apiURL =
 				"https://data.nantesmetropole.fr/api/records/1.0/search/?rows=40&dataset=244400404_parcs-relais-nantes-metropole-disponibilites&q=&facet=grp_nom&facet=grp_statut";
 			const config = {
@@ -42,21 +77,34 @@
 					return {
                         searchString: "",
 						parkings: null,
-                        available: false
+                        available: false,
+						position: null,
+						distance: 20
 					};
 				},
 				created: function () {
+					const self = this;
+					navigator.geolocation.getCurrentPosition((position => {
+						self.position = {
+							longitude: position.coords.longitude,
+							latitude: position.coords.latitude
+						}
+					}));
 					this.fetchDataPromise();
+					
 				},
                 computed: {
                     filteredParkings: function () {
                         let parkings_array = this.parkings;
-                        const searchString = this.searchString;
+                        let searchString = this.searchString;
                         const available = this.available;
+						const distance = this.distance;
 
-                        if (available) parkings_array = parkings_array.filter(item => item.fields.grp_disponible !== 0)
+						searchString = searchString.trim().toLowerCase();
+					
+						if (available) parkings_array = parkings_array.filter(item => item.fields.grp_disponible !== 0)
                         if (searchString) parkings_array = parkings_array.filter(item => item.fields.grp_nom.toLowerCase().indexOf(searchString) !== -1)
-                        
+                        if (distance) parkings_array = parkings_array.filter(item => item.distance < distance)
                         return parkings_array;
                     }
                 },
@@ -66,7 +114,11 @@
 						axios
 							.get(apiURL)
 							.then((response) => {
-                                self.parkings = response.data.records;
+								const parkings = response.data.records;
+								const position = this.position
+
+                                self.parkings = parkings.map(parking => 
+									({...parking, distance: compareDistance(position.longitude, position.latitude, parking.fields.location[1], parking.fields.location[0])}));
 								})
 							.catch(function (error) {
 								console.log(error);
@@ -74,6 +126,8 @@
 					},
 				},
 			}).mount("#app");
+		
+			
 		</script>
 	</body>
 </html>
