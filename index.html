@@ -22,7 +22,7 @@
                     </div>
 					<div class="available">
                         <p>Filtré par distance du parking (km)</p>
-                        <input max="30" default-value="20" min="0" class="distance-input" type="number" v-model="distance">
+                        <input max="30" min="1" class="distance-input" type="number" v-model="distance">
                     </div>
                </div>
 			   <p class="number">{{filteredParkings.length}} parking(s)</p>
@@ -82,14 +82,8 @@
 						distance: 20
 					};
 				},
-				created: function () {
-					const self = this;
-					navigator.geolocation.getCurrentPosition((position => {
-						self.position = {
-							longitude: position.coords.longitude,
-							latitude: position.coords.latitude
-						}
-					}));
+				created: async function () {
+					await this.getPosition();
 					this.fetchDataPromise();
 					
 				},
@@ -111,21 +105,28 @@
                     }
                 },
 				methods: {
-                    fetchDataPromise: function () {
-						const self = this;
-						axios
-							.get(apiURL)
-							.then((response) => {
-								const parkings = response.data.records;
-								const position = this.position
+                    fetchDataPromise: async function() {
+						try {
+							response = await axios.get(apiURL);
+							const position = this.position;
 
-                                self.parkings = parkings.map(parking => 
-									({...parking, distance: compareDistance(position.longitude, position.latitude, parking.fields.location[1], parking.fields.location[0])}));
-								})
-							.catch(function (error) {
-								console.log(error);
-							});
+							
+							this.parkings = response.data.records.map(
+								parking => ({...parking, distance: compareDistance(position.longitude, position.latitude, parking.fields.location[1], parking.fields.location[0])})
+							);
+						}
+						catch (error) {
+							console.log(error)
+						}
 					},
+					getPosition: async function() {
+						navigator.geolocation.getCurrentPosition((position => {
+						this.position = {
+							longitude: position.coords.longitude,
+							latitude: position.coords.latitude
+						}
+					}));
+					}
 				},
 			}).mount("#app");
 		
