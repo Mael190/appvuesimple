@@ -78,13 +78,16 @@
                         searchString: "",
 						parkings: null,
                         available: false,
-						position: null,
+						position: {
+							"longitude": -1.5291629,
+							"latitude": 47.213649
+						},
 						distance: 20
 					};
 				},
 				created: async function () {
 					await this.getPosition();
-					this.fetchDataPromise();
+					await this.fetchDataPromise();
 					
 				},
                 computed: {
@@ -125,6 +128,7 @@
 							longitude: position.coords.longitude,
 							latitude: position.coords.latitude
 						}
+						return
 					}));
 					}
 				},
